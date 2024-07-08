@@ -104,15 +104,6 @@
 (setq shell-file-name (executable-find "bash"))
 (setq-default vterm-shell (executable-find "fish"))
 
-;; (global-set-key (kbd "C-c i") 'symbols-outline-show)
-;; (with-eval-after-load 'symbols-outline
-;;   ;; By default the ctags backend is selected
-;;   (unless (executable-find "ctags")
-;;     ;; Use lsp-mode or eglot as backend
-;;     (setq symbols-outline-fetch-fn #'symbols-outline-lsp-fetch))
-;;   (setq symbols-outline-window-position 'left)
-;;   (symbols-outline-follow-mode))
-
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
@@ -134,6 +125,7 @@
 (use-package! lsp-bridge
   :config
   (setq lsp-bridge-enable-log nil)
+  (setq lsp-bridge-enable-hover-diagnostic t)
   (global-lsp-bridge-mode))
 
 (defun vertical-split-definition ()
@@ -169,3 +161,25 @@
 (map!
  :n "M-g h"
  #'horizontal-split-definition)
+
+(defun my/lsp-bridge-diagnostics-at-point ()
+  "Display error message at point in a mini-buffer and a dedicated buffer."
+  (interactive)
+  (when-let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+    (let* ((diagnostic-display-message (overlay-get overlay 'display-message))
+           (diagnostic-message (overlay-get overlay 'message))
+           (message-buffer (get-buffer-create "*LSP Bridge Diagnostics*"))
+           (message-content (format "Diagnostic display message: %s\nMessage: %s\n\n"
+                                    diagnostic-display-message diagnostic-message)))
+      ;; Clear the buffer and insert the new message
+      (with-current-buffer message-buffer
+        (erase-buffer)
+        (insert message-content))
+      ;; Display the buffer and switch to it
+      (let ((window (display-buffer message-buffer)))
+        (select-window window)
+        (with-current-buffer message-buffer
+          (goto-char (point-min))
+          (fit-window-to-buffer window))))))
+
+(global-set-key (kbd "C-c d") 'my/lsp-bridge-diagnostics-at-point)
