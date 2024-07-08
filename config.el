@@ -134,6 +134,7 @@
 (use-package! lsp-bridge
   :config
   (setq lsp-bridge-enable-log nil)
+  (setq lsp-bridge-enable-hover-diagnostic t)
   (global-lsp-bridge-mode))
 
 (defun vertical-split-definition ()
@@ -169,3 +170,18 @@
 (map!
  :n "M-g h"
  #'horizontal-split-definition)
+
+(defun my/lsp-bridge-diagnostics-at-point ()
+  "Display error message at point in a mini-buffer"
+  (interactive)
+  (when-let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+    (let* ((diagnostic-display-message (overlay-get overlay 'display-message))
+           (diagnostic-message (overlay-get overlay 'message)))
+      (message "Diagnostic display message: %s\nMessage: %s"
+               diagnostic-display-message diagnostic-message)
+      ))
+  (message "No diagnostic found"))
+
+(global-set-key (kbd "C-c d") 'my/lsp-bridge-diagnostics-at-point)
+
+(setq debug-on-error t)
