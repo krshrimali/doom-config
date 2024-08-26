@@ -49,17 +49,47 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
 
-(package! auto-complete)
-(package! symbols-outline)
+(package! yasnippet)
 
-(when (package! lsp-bridge
-        :recipe (
-                 :host github
-                 :repo "manateelazycat/lsp-bridge"
-                 :branch "master"
-                 :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-                 ;; do not perform byte compilation or native compilation for lsp-bridge
-                 :build (:not compile)
-                 )
-        )
-  )
+;; (package! lsp-bridge
+;;   :recipe (:host github
+;;            :repo "manateelazycat/lsp-bridge"
+;;            :files ("*.el" "*.py" "acm" "core" "langserver"
+;;                    "multiserver" "resources")))
+
+;; (unless (display-graphic-p)
+;;   (package! popon
+;;     :recipe (:host nil :repo "https://codeberg.org/akib/emacs-popon.git"))
+;;   (package! acm-terminal
+;;     :recipe (:host github :repo "twlz0ne/acm-terminal")))
+
+;; (when (package! lsp-bridge
+;;         :recipe (:host github
+;;                  :repo "manateelazycat/lsp-bridge"
+;;                  :branch "master"
+;;                  :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+;;                  ;; do not perform byte compilation or native compilation for lsp-bridge
+;;                  :build (:not compile)))
+;;   (package! markdown-mode)
+;;   (package! yasnippet))
+
+(package! symbols-outline
+  :recipe (:host github
+                 :repo "liushihao456/symbols-outline.el"))
+
+(package! treesitter-context
+  :recipe (:host github
+                 :repo "zbelial/treesitter-context.el"))
+
+(package! fancy-narrow
+  :recipe (:host github
+                 :repo "Malabarba/fancy-narrow"))
+
+(package! lsp-bridge :recipe
+  (:host github
+   :repo "manateelazycat/lsp-bridge"
+   :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+   :build (:not compile)))
+
+(package! copilot
+  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
