@@ -43,8 +43,8 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-(require 'evil-leader)
-(global-evil-leader-mode)
+;; (require 'evil-leader)
+;; (global-evil-leader-mode)
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
@@ -87,20 +87,20 @@
 ;;    corfu-auto-prefix 1
 ;;    corfu-sort-function nil
 ;;    ))
-(use-package! corfu
-  :custom
-  (corfu-auto t)
-  (corfu-auto-delay 0.00)
-  (corfu-auto-prefix 1)
-  (corfu-preview-current nil)
-  (corfu-quit-at-boundary 'separator)
-  (corfu-quit-no-match t)
-  (corfu-cycle t)
-  (corfu-preselect-first t)
-  (corfu-echo-documentation 0.25)
+;; (use-package! corfu
+;;   :custom
+;;   (corfu-auto t)
+;;   (corfu-auto-delay 0.00)
+;;   (corfu-auto-prefix 1)
+;;   (corfu-preview-current nil)
+;;   (corfu-quit-at-boundary 'separator)
+;;   (corfu-quit-no-match t)
+;;   (corfu-cycle t)
+;;   (corfu-preselect-first t)
+;;   (corfu-echo-documentation 0.25)
 
-  :config
-  (global-corfu-mode))
+;;   :config
+;;   (global-corfu-mode))
 
 (use-package! cape
   :after corfu
@@ -115,7 +115,6 @@
   ;; Add useful defaults completion sources from cape
   (dolist (completion-source '(cape-file cape-dabbrev cape-keyword cape-elisp-symbol))
     (add-to-list 'completion-at-point-functions completion-source)))
-
 
 (use-package! corfu-popupinfo
   :after corfu
@@ -598,3 +597,71 @@
 (map! :leader
       :desc "Show line diagnostics"
       "c L" #'show-diagnostics-for-current-line)
+
+;; (use-package! dabbrev
+;;   :after corfu
+;;   :config
+;;   ;; Enable dabbrev to complete from buffer contents
+;;   (setq dabbrev-case-fold-search nil) ; Case-sensitive completion
+;;   (setq dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")) ; Ignore binary files
+
+;;   ;; Add dabbrev to corfu completion sources
+;;   (add-to-list 'completion-at-point-functions #'dabbrev-completion))
+
+;; accept completion from copilot and fallback to company
+(use-package! copilot
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+;; Optional cape package.
+;; See the Cape README for more tweaks!
+(use-package cape)
+
+(use-package orderless
+  :init
+  ;; Tune the global completion style settings to your liking!
+  ;; This affects the minibuffer and non-lsp completion at point.
+  (setq completion-styles '(orderless partial-completion basic)
+        completion-category-defaults nil
+        completion-category-overrides nil))
+
+(use-package lsp-mode
+  :custom
+  (lsp-completion-provider :none) ;; we use Corfu!
+
+  :init
+  (defun my/orderless-dispatch-flex-first (_pattern index _total)
+    (and (eq index 0) 'orderless-flex))
+
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))
+    ;; Optionally configure the first word as flex filtered.
+    (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+    ;; Optionally configure the cape-capf-buster.
+    (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point))))
+
+  :hook
+  (lsp-completion-mode . my/lsp-mode-setup-completion))
+
+;; Load Copilot
+(use-package! copilot
+  :hook (prog-mode . copilot-mode))
+
+;; Define a function to conditionally disable corfu when copilot suggestions are active
+(defun my/copilot-corfu-integration ()
+  (if (copilot-suggestion-is-active)
+      (corfu-quit)
+    (corfu-mode)))
+
+;; Use this function in your hooks for when Copilot mode is active
+(add-hook 'copilot-completion-started-hook #'my/copilot-corfu-integration)
+(add-hook 'copilot-completion-finished-hook #'corfu-mode)
+(add-hook 'copilot-completion-cancelled-hook #'corfu-mode)
+
+;; Optionally bind copilot to a key for manual triggering
+;; (map! :i "C-SPC" #'copilot-accept-completion)

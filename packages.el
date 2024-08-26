@@ -90,3 +90,6 @@
    :repo "manateelazycat/lsp-bridge"
    :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
    :build (:not compile)))
+
+(package! copilot
+  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
